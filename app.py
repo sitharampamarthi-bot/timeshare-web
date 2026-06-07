@@ -282,6 +282,10 @@ def bills():
     from_date = request.args.get("from_date", "")
     to_date = request.args.get("to_date", "")
 
+    page = int(request.args.get("page", 1))
+    per_page = 50
+    start = (page - 1) * per_page
+
     from_dt = parse_bill_date(from_date)
     to_dt = parse_bill_date(to_date)
 
@@ -319,22 +323,31 @@ def bills():
             continue
 
         bills_list.append(bill)
-        
-        bills_list.sort(
-            key=lambda x: parse_bill_date(x.get("date", "")) or datetime.min.date(),
-            reverse=True
-        )       
+
+    bills_list.sort(
+        key=lambda x: parse_bill_date(x.get("date", "")) or datetime.min.date(),
+        reverse=True
+    )
 
     total_payment = sum(float(b["paidAmount"] or 0) for b in bills_list)
+    total_bills = len(bills_list)
+
+    total_pages = (total_bills + per_page - 1) // per_page
+    if total_pages == 0:
+        total_pages = 1
+
+    bills_page = bills_list[start:start + per_page]
 
     return render_template(
         "bills.html",
-        bills=bills_list,
-        total_bills=len(bills_list),
+        bills=bills_page,
+        total_bills=total_bills,
         total_payment=total_payment,
         search=search,
         from_date=from_date,
-        to_date=to_date
+        to_date=to_date,
+        page=page,
+        total_pages=total_pages
     )
     
 def is_duplicate_receipt(receipt_no, current_doc_id=None):

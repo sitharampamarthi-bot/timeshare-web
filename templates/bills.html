@@ -114,16 +114,18 @@
                     class="form-control">
             </div>
 
-            <div class="col-md-3 d-flex gap-2">
-                <div class="row g-3 filter-row">
-                    <button class="btn btn-primary w-100">Filter</button>
-                    <a href="/bills" class="btn btn-outline-secondary w-100">Clear</a>
+            <div class="col-md-3">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary">Filter</button>
+                    <a href="/bills" class="btn btn-outline-secondary">Clear</a>
                 </div>
             </div>
-            <a href="/download_pdf?search={{ search|urlencode }}&from_date={{ from_date }}&to_date={{ to_date }}"
-                class="btn btn-danger">
-                Download PDF
-            </a>
+            <div class="col-md-12">
+                <a href="/download_pdf?search={{ search|urlencode }}&from_date={{ from_date }}&to_date={{ to_date }}"
+                    class="btn btn-danger w-100">
+                    Download PDF
+                </a>
+            </div>
 
         </div>
 
@@ -205,24 +207,54 @@
                 </tbody>
 
             </table>
+            <div class="d-flex justify-content-center gap-2 mt-4">
+
+                {% if page > 1 %}
+                <a class="btn btn-outline-primary"
+                    href="/bills?search={{ search|urlencode }}&from_date={{ from_date }}&to_date={{ to_date }}&page={{ page-1 }}">
+                    Previous
+                </a>
+                {% endif %}
+
+                <span class="btn btn-light">
+                    Page {{ page }} of {{ total_pages }}
+                </span>
+
+                {% if page < total_pages %}
+                <a class="btn btn-outline-primary"
+                    href="/bills?search={{ search|urlencode }}&from_date={{ from_date }}&to_date={{ to_date }}&page={{ page+1 }}">
+                    Next
+                </a>
+                {% endif %}
+
+            </div>
         </div>
 
     </div>
 
 </div>
+
 <div class="modal fade" id="imagePreviewModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="border-radius:18px;">
-            <div class="modal-header">
-                <h5 class="modal-title">Image Preview</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+
+        <div class="modal-header">
+            <h5 class="modal-title">Bill Image</h5>
+
+            <button type="button"
+                class="btn-close"
+                data-bs-dismiss="modal">
+            </button>
+        </div>
+
+        <div class="modal-body text-center">
+
+            <img id="previewImage"
+                src=""
+                class="img-fluid rounded">
+
             </div>
 
-            <div class="modal-body text-center p-2">
-                <img id="previewImage"
-                     src=""
-                     style="width:100%;max-height:85vh;object-fit:contain;border-radius:12px;">
-            </div>
         </div>
     </div>
 </div>
