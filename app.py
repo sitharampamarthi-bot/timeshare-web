@@ -14,9 +14,19 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-cred = credentials.Certificate(
-    os.path.join(BASE_DIR, "serviceAccountKey.json")
-)
+import json
+
+app = Flask(__name__)
+
+firebase_key = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
+
+if firebase_key:
+    cred_dict = json.loads(firebase_key)
+    cred = credentials.Certificate(cred_dict)
+else:
+    cred = credentials.Certificate(
+        os.path.join(BASE_DIR, "serviceAccountKey.json")
+    )
 
 firebase_admin.initialize_app(cred, {
     "storageBucket": "timeshare-app-f35b3.firebasestorage.app"
@@ -39,8 +49,6 @@ def parse_bill_date(date_text):
 
     return None
 
-
-app = Flask(__name__)
 
 print("BASE_DIR =", BASE_DIR)
 
@@ -356,8 +364,9 @@ def edit_bill(doc_id):
 @app.route("/delete-bill/<doc_id>")
 def delete_bill(doc_id):
     db.collection("bills").document(doc_id).delete()
-    return redirect("/bills")    
+    return redirect("/bills")
 
-if __name__ == "__main__":
-    create_db()
+create_db()
+
+if __name__ == "__main__":    
     app.run(debug=True, host="0.0.0.0", port=5000)
