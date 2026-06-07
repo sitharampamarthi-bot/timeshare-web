@@ -1,0 +1,21 @@
+{
+  "name": "Timeshare App",
+  "short_name": "Timeshare",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f2ff",
+  "theme_color": "#6f42c1",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

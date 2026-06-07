@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#6f42c1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body{background:#f5f2ff;font-family:Arial,sans-serif;}
+        .sidebar{min-height:100vh;background:#6f42c1;color:white;padding:25px;}
+        .sidebar a{color:white;text-decoration:none;display:block;padding:12px;border-radius:12px;margin-bottom:8px;}
+        .sidebar a:hover{background:rgba(255,255,255,0.2);}
+        .card-box{border:none;border-radius:22px;box-shadow:0 10px 25px rgba(0,0,0,0.08);}
+        .icon-box{font-size:42px;color:#6f42c1;}
+    </style>
+</head>
+
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+
+        <div class="col-md-3 col-lg-2 sidebar">
+            <h3 class="fw-bold mb-4">Timeshare</h3>
+            <a href="/admin-dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+            <a href="#"><i class="bi bi-people"></i> Users</a>
+            <a href="/bills"><i class="bi bi-receipt"></i> Bills</a>
+            <a href="#"><i class="bi bi-credit-card"></i> Payments</a>
+            <a href="#"><i class="bi bi-bar-chart"></i> Reports</a>
+            <a href="#"><i class="bi bi-gear"></i> Settings</a>
+            <a href="/"><i class="bi bi-box-arrow-right"></i> Logout</a>
+        </div>
+
+        <div class="col-md-9 col-lg-10 p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold">Admin Dashboard</h2>
+                <span class="badge bg-primary fs-6">Admin</span>
+            </div>
+
+            <div class="row g-4">
+
+                <div class="col-md-3">
+                    <div class="card card-box p-4 text-center">
+                        <i class="bi bi-people icon-box"></i>
+                        <h5 class="mt-3">Users</h5>
+                        <h3>{{ total_users }}</h3>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <a href="/bills" style="text-decoration:none;color:inherit;">
+                        <div class="card card-box p-4 text-center">
+                            <i class="bi bi-receipt icon-box"></i>
+                            <h5 class="mt-3">Bills</h5>
+                            <h3>{{ total_bills }}</h3>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-box p-4 text-center">
+                        <i class="bi bi-cash-stack icon-box"></i>
+                        <h5 class="mt-3">Payments</h5>
+                        <h3>₹{{ total_payment }}</h3>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-box p-4 text-center">
+                        <i class="bi bi-bar-chart icon-box"></i>
+                        <h5 class="mt-3">Reports</h5>
+                        <h3>0</h3>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/static/service-worker.js");
+}
+</script>
+
+</body>
+</html>
