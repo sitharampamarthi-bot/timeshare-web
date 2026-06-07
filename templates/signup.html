@@ -39,6 +39,11 @@
                 <label>Password</label>
                 <input type="password" name="password" class="form-control" placeholder="Enter password" required>
             </div>
+            {% if error %}
+            <div class="alert alert-danger mt-2">
+                {{ error }}
+            </div>
+            {% endif %}
 
             <button class="btn btn-primary w-100">
                 Create Account

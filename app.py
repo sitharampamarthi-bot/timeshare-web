@@ -3,6 +3,12 @@ import sqlite3
 import firebase_admin
 from firebase_admin import credentials, firestore, storage
 from datetime import datetime
+from flask import send_file
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet
+import tempfile
 from flask import (
     Flask,
     render_template,
@@ -137,55 +143,119 @@ def create_db():
 
 @app.route("/", methods=["GET", "POST"])
 def login():
+    error = ""
+
     if request.method == "POST":
-        mobile = request.form["mobile"]
-        password = request.form["password"]
+        login_id = request.form.get("login_id", "").strip().lower()
+        password = request.form.get("password", "").strip()
 
-        conn = sqlite3.connect("database.db")
-        cur = conn.cursor()
+        docs = db.collection("users").stream()
 
-        cur.execute("""
-            SELECT * FROM users
-            WHERE mobile = ? AND password = ?
-        """, (mobile, password))
+        for doc in docs:
+            data = doc.to_dict()
 
-        user = cur.fetchone()
-        conn.close()
+            db_mobile = str(data.get("mobile", "")).strip().lower()
+            db_phone = str(data.get("phone", "")).strip().lower()
+            db_email = str(data.get("email", "")).strip().lower()
+            db_password = str(data.get("password", "")).strip()
 
-        if user:
-            return redirect("/admin-dashboard")
-        else:
-            return "Invalid mobile or password"
+            if (login_id == db_mobile or login_id == db_phone or login_id == db_email) and password == db_password:
+                return redirect("/admin-dashboard")
 
-    return render_template("login.html")
+        error = "Invalid mobile/email or password"
+
+    return render_template("login.html", error=error)
+
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
+
+    error = ""
+
     if request.method == "POST":
+
         name = request.form["name"]
         mobile = request.form["mobile"]
         email = request.form["email"]
         password = request.form["password"]
 
-        conn = sqlite3.connect("database.db")
-        cur = conn.cursor()
+        user = db.collection("users") \
+                 .where("mobile", "==", mobile) \
+                 .limit(1) \
+                 .get()
 
-        try:
-            cur.execute("""
-                INSERT INTO users (name, mobile, email, password, role)
-                VALUES (?, ?, ?, ?, ?)
-            """, (name, mobile, email, password, "user"))
+        if len(user) > 0:
+            error = "Mobile number already registered"
 
-            conn.commit()
-        except:
-            conn.close()
-            return "Mobile number already registered"
+        else:
+            db.collection("users").add({
+                "name": name,
+                "mobile": mobile,
+                "email": email,
+                "password": password
+            })
 
-        conn.close()
-        return redirect("/")
+            return redirect("/")
 
-    return render_template("signup.html")
+    return render_template(
+        "signup.html",
+        error=error
+    )
+    
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    message = ""
 
+    if request.method == "POST":
+        mobile = request.form.get("mobile", "").strip()
+        email = request.form.get("email", "").strip().lower()
+
+        found_id = None
+
+        docs = db.collection("users").stream()
+
+        for doc in docs:
+            data = doc.to_dict()
+
+            db_mobile = str(data.get("mobile", "")).strip()
+            db_phone = str(data.get("phone", "")).strip()
+            db_email = str(data.get("email", "")).strip().lower()
+
+            if mobile and (db_mobile == mobile or db_phone == mobile):
+                found_id = doc.id
+                break
+
+            if email and db_email == email:
+                found_id = doc.id
+                break
+
+        if found_id:
+            return redirect(f"/reset-password/{found_id}")
+        else:
+            message = "Mobile number or email not found"
+
+    return render_template("forgot_password.html", message=message)
+
+@app.route("/reset-password/<user_id>", methods=["GET", "POST"])
+def reset_password(user_id):
+    message = ""
+
+    if request.method == "POST":
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if new_password != confirm_password:
+            message = "Passwords do not match"
+        elif len(new_password) < 4:
+            message = "Password must be at least 4 characters"
+        else:
+            db.collection("users").document(user_id).update({
+                "password": new_password
+            })
+            return redirect("/")
+
+    return render_template("reset_password.html", message=message)    
+    
 @app.route("/admin-dashboard")
 def admin_dashboard():
     bills_docs = list(db.collection("bills").stream())
@@ -365,6 +435,105 @@ def edit_bill(doc_id):
 def delete_bill(doc_id):
     db.collection("bills").document(doc_id).delete()
     return redirect("/bills")
+
+@app.route("/download_pdf")
+def download_pdf():
+    
+    search = request.args.get("search", "").strip().lower()
+    from_date = request.args.get("from_date", "").strip()
+    to_date = request.args.get("to_date", "").strip()
+
+    from_dt = parse_bill_date(from_date) if from_date else None
+    to_dt = parse_bill_date(to_date) if to_date else None
+
+    docs = db.collection("bills").stream()
+    bills_list = []
+
+    for doc in docs:
+        data = doc.to_dict()
+
+        bill_date = data.get("date", "")
+        bill_dt = parse_bill_date(bill_date)
+
+        id_no = str(data.get("idNo", ""))
+        receipt_no = str(data.get("receiptNo", ""))
+        member_name = str(data.get("memberName", ""))
+        mobile_no = str(data.get("mobileNo", ""))
+        paid_amount = data.get("paidAmount", 0)
+
+        search_text = f"{id_no} {receipt_no} {member_name} {mobile_no}".lower()
+
+        if search and search not in search_text:
+            continue
+
+        if from_dt and bill_dt and bill_dt < from_dt:
+            continue
+
+        if to_dt and bill_dt and bill_dt > to_dt:
+            continue
+
+        bills_list.append({
+            "date": bill_date,
+            "idNo": id_no,
+            "receiptNo": receipt_no,
+            "memberName": member_name,
+            "mobileNo": mobile_no,
+            "paidAmount": paid_amount,
+        })
+
+    total_payment = sum(float(b["paidAmount"] or 0) for b in bills_list)
+
+    pdf_path = tempfile.mktemp(".pdf")
+    pdf = SimpleDocTemplate(pdf_path, pagesize=A4)
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    elements.append(Paragraph("Timeshare Billing Report", styles["Title"]))
+    elements.append(Spacer(1, 12))
+
+    if search:
+        elements.append(Paragraph(f"Search: {search}", styles["Normal"]))
+
+    if from_date or to_date:
+        elements.append(Paragraph(f"Date Filter: {from_date} to {to_date}", styles["Normal"]))
+
+    elements.append(Paragraph(f"Total Bills: {len(bills_list)}", styles["Normal"]))
+    elements.append(Paragraph(f"Total Payment: Rs.{total_payment}", styles["Normal"]))
+    elements.append(Spacer(1, 12))
+
+    rows = [["Date", "ID No", "Receipt", "Member", "Mobile", "Amount"]]
+
+    for b in bills_list:
+        rows.append([
+            str(b["date"]),
+            str(b["idNo"]),
+            str(b["receiptNo"]),
+            str(b["memberName"]),
+            str(b["mobileNo"]),
+            str(b["paidAmount"]),
+        ])
+
+    table = Table(rows, repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+    ]))
+
+    elements.append(table)
+    pdf.build(elements)
+    
+    print("SEARCH =", search)
+    print("FROM =", from_date)
+    print("TO =", to_date)
+
+    return send_file(
+        pdf_path,
+        as_attachment=True,
+        download_name="bills_report.pdf"
+    )
 
 create_db()
 
