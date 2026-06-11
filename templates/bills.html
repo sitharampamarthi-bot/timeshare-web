@@ -77,6 +77,8 @@
         <h2 class="fw-bold mb-0">Bills</h2>
 
         <div class="d-flex gap-2">
+            <a href="/services" class="btn btn-primary">Services</a>
+            <a href="/refunds" class="btn btn-warning">Refunds</a>
             <a href="/add-bill" class="btn btn-primary">+ Add Bill</a>
             <a href="/admin-dashboard" class="btn btn-secondary">Back</a>
         </div>
@@ -198,6 +200,7 @@
                         <td>{{ bill.remarks }}</td>
                         <td>
                             <a href="/edit-bill/{{ bill.docId }}" class="btn btn-warning btn-sm">Edit</a>
+                            <a href="/refund-bill/{{ bill.docId }}" class="btn btn-info btn-sm">Refunds</a>
                             <a href="/delete-bill/{{ bill.docId }}"
                             onclick="return confirm('Delete this bill?')"
                             class="btn btn-danger btn-sm">Delete</a>

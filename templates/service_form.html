@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% if service %}Edit Service{% else %}Add Service{% endif %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .file-preview-img {
+            max-width: 100%;
+            max-height: 75vh;
+            object-fit: contain;
+        }
+
+        .file-preview-frame {
+            width: 100%;
+            height: 75vh;
+            border: none;
+        }
+    </style>
+</head>
+
+<body style="background:#f5f2ff;">
+
+<div class="container p-3 p-md-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            {% if service %}Edit Service{% else %}Add Service{% endif %}
+        </h2>
+
+        <a href="/services" class="btn btn-secondary">Back</a>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="card p-3 shadow-sm">
+
+        <div class="row g-3">
+
+            <div class="col-md-4">
+                <label class="form-label">Date</label>
+                <input type="date" name="date" class="form-control" required
+                       value="{{ service.date if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">ID No</label>
+                <input type="text" name="idNo" id="idNo" class="form-control text-uppercase" required
+                       value="{{ service.idNo if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Member Name</label>
+                <input type="text" name="memberName" id="memberName" class="form-control" required
+                       value="{{ service.memberName if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Mobile</label>
+                <input type="text" name="mobile" id="mobile" class="form-control"
+                       value="{{ service.mobile if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Place</label>
+                <input type="text" name="place" class="form-control" required
+                       value="{{ service.place if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Room Type</label>
+                <input type="text" name="roomType" class="form-control"
+                       placeholder="AC / Non AC / Suite"
+                       value="{{ service.roomType if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">From Date</label>
+                <input type="date" name="fromDate" id="fromDate" class="form-control" required
+                       value="{{ service.fromDate if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">To Date</label>
+                <input type="date" name="toDate" id="toDate" class="form-control" required
+                       value="{{ service.toDate if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Days</label>
+                <input type="number" name="days" id="days" class="form-control" readonly
+                       value="{{ service.days if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Total Members</label>
+                <input type="number" name="totalMembers" class="form-control"
+                       value="{{ service.totalMembers if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Adults</label>
+                <input type="number" name="adults" class="form-control"
+                       value="{{ service.adults if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Children</label>
+                <input type="number" name="children" class="form-control"
+                       value="{{ service.children if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Amount</label>
+                <input type="number" step="0.01" name="amount" class="form-control"
+                       value="{{ service.amount if service else '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Payment Mode</label>
+                <select name="paymentMode" class="form-select">
+                    <option value="">Select</option>
+                    {% set mode = service.paymentMode if service else '' %}
+                    <option value="Cash" {% if mode == 'Cash' %}selected{% endif %}>Cash</option>
+                    <option value="PhonePe" {% if mode == 'PhonePe' %}selected{% endif %}>PhonePe</option>
+                    <option value="Google Pay" {% if mode == 'Google Pay' %}selected{% endif %}>Google Pay</option>
+                    <option value="Bank Transfer" {% if mode == 'Bank Transfer' %}selected{% endif %}>Bank Transfer</option>
+                    <option value="Card" {% if mode == 'Card' %}selected{% endif %}>Card</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Images / Documents</label>
+                <input type="file" name="files" class="form-control" multiple
+                       accept="image/*,.pdf,.doc,.docx">
+            </div>
+
+            {% if service and service.files %}
+            <div class="col-12">
+                <label class="form-label">Existing Files</label>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for file in service.files %}
+                        <div>
+                            <input type="hidden" name="old_files" value="{{ file }}">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary mb-1"
+                                    onclick="openFilePopup('{{ file }}')">
+                                View
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="col-12">
+                <label class="form-label">Remarks</label>
+                <textarea name="remarks" class="form-control" rows="3">{{ service.remarks if service else '' }}</textarea>
+            </div>
+
+            <div class="col-12 d-grid mt-3">
+                <button class="btn btn-success btn-lg">
+                    {% if service %}Update Service{% else %}Save Service{% endif %}
+                </button>
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+<script>
+document.getElementById("idNo").addEventListener("blur", function(){
+    let idNo = this.value.trim();
+
+    if(idNo.length === 0) return;
+
+    fetch("/get-member/" + encodeURIComponent(idNo))
+        .then(res => res.json())
+        .then(data => {
+            if(data.found){
+                document.getElementById("memberName").value = data.memberName;
+                document.getElementById("mobileNo").value = data.mobileNo;
+            }
+        });
+});
+</script>
+
+<script>
+function calculateDays() {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+
+    if (fromDate && toDate) {
+        const start = new Date(fromDate);
+        const end = new Date(toDate);
+
+        const diffTime = end - start;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        document.getElementById('days').value = diffDays > 0 ? diffDays : 1;
+    }
+}
+
+document.getElementById('fromDate').addEventListener('change', calculateDays);
+document.getElementById('toDate').addEventListener('change', calculateDays);
+</script>
+<div class="modal fade" id="fileModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">File Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center" id="filePreviewBody">
+            </div>
+
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+function openFilePopup(fileUrl) {
+    const body = document.getElementById('filePreviewBody');
+    body.innerHTML = '';
+
+    const lowerUrl = fileUrl.toLowerCase();
+
+    if (
+        lowerUrl.includes('.jpg') ||
+        lowerUrl.includes('.jpeg') ||
+        lowerUrl.includes('.png') ||
+        lowerUrl.includes('.webp') ||
+        lowerUrl.includes('.gif')
+    ) {
+        body.innerHTML = `<img src="${fileUrl}" class="file-preview-img">`;
+    } else if (lowerUrl.includes('.pdf')) {
+        body.innerHTML = `<iframe src="${fileUrl}" class="file-preview-frame"></iframe>`;
+    } else {
+        body.innerHTML = `
+            <p>This file cannot be previewed here.</p>
+            <a href="${fileUrl}" target="_blank" class="btn btn-primary">Open File</a>
+        `;
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById('fileModal'));
+    modal.show();
+}
+</script>  
+
+</body>
+</html>
